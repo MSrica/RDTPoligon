@@ -43,19 +43,17 @@ timeLabel.grid(column=1, row=2, sticky=N)
 timeValue = ttk.Label(mainframe, text="00:00:00")
 timeValue.grid(column=2, row=2, sticky=N)
 
-currentLapLabel = ttk.Label(mainframe, text="Lap:")
-currentLapLabel.grid(column=1, row=3, sticky=N)
-currentLapValue = ttk.Label(mainframe, text="1")
-currentLapValue.grid(column=2, row=3, sticky=N)
-
 #Serial
 ##########################################################################################
 serialThreadBoolean = False
 line = "0"
 state = False
 
-def playTheSound():
+def playBruh():
 	playsound('bruh.mp3', False)
+
+def playDing():
+	playsound('ding.mp3', False)
 
 def serialInit():
 	global serialPort
@@ -63,40 +61,44 @@ def serialInit():
 	serialPort.baudrate = 9600
 	serialPort.port = COMPortCombobox.get()
 	serialPort.open()
-	inputLoop()
+	main()
 
 def serialClose():
 	serialPort.close()
 
-def inputLoop():
+def main():
 	if serialThreadBoolean:
 		global line
 		global currentColumn
 		global state
 		global isConnected
 		global isStarted
+		global timer
+		global resetTimer
 	#Input from receiver
 		bLine = serialPort.readline()
 		line = str(bLine)
 		line = line[2:len(line)-5]
-		print(line)
 
 		if line != "":
 	#Ready
 			if line == "connected":
+				playDing()
 				isConnected = True
 				startButton.configure(text="Ready")
 	#Liftoff		 	
 			elif line == "0":
+				playBruh()
 				state = True
 				isStarted = True
 				startButton.configure(text="Running")
 				timeStringToTimesArray()
-				playTheSound()
 	#Passing trough gate
 			else:
+				playBruh()
 				timeStringToTimesArray()
-				playTheSound()
+				if int(line) == int(gateNumberComboBox.get()):
+					timeStringToLaptimesArray()
 			if state:
 				generateTable()
 
@@ -104,13 +106,20 @@ def inputLoop():
 			if currentColumn >= int(lapNumberComboBox.get()):
 				if int(line) == int(gateNumberComboBox.get()):
 					bestCurrentLap()
+					bestOverallLap()
+					bestOverallTime()
 					stopSerialThread()
 					serialClose()
 					startButton.configure(text="Finished")
+					finalMin = int(times[int(line)-1][currentColumn-1][0:2])
+					finalSec = int(times[int(line)-1][currentColumn-1][3:5])
+					finalMsc = int(times[int(line)-1][currentColumn-1][6:8])
+					timer = [finalMin, finalSec, finalMsc]
+					resetTimer = False
 					resetData()
-		
+
 		time.sleep(.01)
-		inputLoop()
+		main()
 	else:
 		print("not refreshing from arduino")
 
@@ -119,10 +128,9 @@ def serialPorts():
 
 def startSerialThread():
 	global serialThreadBoolean
-	if not (COMPortCombobox.get() == 'None' or COMPortCombobox.get() == ''):
-		serialThreadBoolean = True
-		serialThread = Thread(target=serialInit, daemon=True)
-		serialThread.start()
+	serialThreadBoolean = True
+	serialThread = Thread(target=serialInit, daemon=True)
+	serialThread.start()
 
 def stopSerialThread():
 	global serialThreadBoolean
@@ -138,24 +146,25 @@ isConnected = False
 isStarted = False
 
 def resetData():
-	global laptimes
-	global times
-	global timer
-	global currentColumn
-	global state
-	global startSecondsBuffer
-	global startMinutesBuffer
 	global isConnected
-	global isStarted
 	isConnected = False
+	global isStarted
 	isStarted = False
+	global startSecondsBuffer
 	startSecondsBuffer = 0
+	global startMinutesBuffer
 	startMinutesBuffer = 0
+	global currentColumn
 	currentColumn = 0
+	global state
 	state = False
-	timer = [0, 0, 0]
+	global laptimes
 	laptimes = ["00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00"]
+	global times
 	times = [["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"], ["00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00","00:00.00"]]
+	if resetTimer:
+		global timer
+		timer = [0, 0, 0]
 
 def updateStopwatchTimeText():
 	if state and isStarted:
@@ -167,29 +176,32 @@ def updateStopwatchTimeText():
 		if (timer[1] >= 60):
 		    timer[0] += 1
 		    timer[1] = 0
+
 	else:
 		pass
 
 	global timeString
 	timeString = pattern.format(timer[0], timer[1], timer[2])
+	timeString = timeString
 	timeValue.configure(text=timeString)
 
 	root.after(10, updateStopwatchTimeText)
 
 def startStopwatch():
 	global state
-	if not state:
+	if not state and not (COMPortCombobox.get() == 'None' or COMPortCombobox.get() == ''):
 		state = True
 		startSerialThread()		
 
 def resetStopwatch():
+	global resetTimer
+	resetTimer = True
 	resetData()
 	if serialThreadBoolean:
 		stopSerialThread()
 		serialClose()
 	generateTable()
 	startButton.configure(text="Start")
-	timeValue.configure(text='00:00.00')
 
 startButton = tk.Button(mainframe, text='Start', command=startStopwatch)
 startButton.grid(row=4, column=1, columnspan=2)
@@ -219,8 +231,10 @@ global laptimes
 laptimes = ["00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00", "00:00.00"]
 global bestLap
 bestLap = 9999999
-global bestTotalTime
-bestTotalTime = 9999999
+global bestLapStr
+bestLapStr = "NA"
+global bestTimeStr
+bestTimeStr = ["NA", "NA", "NA", "NA", "NA"]
 
 
 def tableFrameInit():
@@ -229,51 +243,122 @@ def tableFrameInit():
 	tableframe.grid(column=0, row=0, sticky=(S, N, N, N))
 
 def timeStringToTimesArray():
-	global timeString
 	global times
-	global line
+	times[int(line)-1][currentColumn] = timeString
+
+def timeStringToLaptimesArray():
+	global timeString
 	global currentColumn
 	global startSecondsBuffer
 	global startMinutesBuffer
 
-	times[int(line)-1][currentColumn] = timeString
-	if int(line) == int(gateNumberComboBox.get()):
-		secondsAndMilisecond = str(float(timeString[3:8]) - startSecondsBuffer).split('.')
+	minutes = int(timeString[0:2]) - startMinutesBuffer
+	secondsAndMilisecond = str(float(timeString[3:8]) - startSecondsBuffer).split('.')
+	if len(secondsAndMilisecond[1]) == 1:
+		secondsAndMilisecond[1] += "0"
+	elif len(secondsAndMilisecond[1]) > 2:
 		secondsAndMilisecond[1] = secondsAndMilisecond[1][0:2]
-		minutes = int(timeString[0:2]) - startMinutesBuffer
-		laptimes[currentColumn] = pattern.format(minutes, int(secondsAndMilisecond[0]), int(secondsAndMilisecond[1]))
-		startSecondsBuffer = float(timeString[3:8])
-		startMinutesBuffer = int(timeString[0:2])
-		currentColumn += 1
+	laptimes[currentColumn] = pattern.format(minutes, int(secondsAndMilisecond[0]), int(secondsAndMilisecond[1]))
+	startSecondsBuffer = float(timeString[3:8])
+	startMinutesBuffer = int(timeString[0:2])
+	currentColumn += 1
 
 def bestCurrentLap():
 	global bestLap
-	bestLapStr = ""
-	currentTime = 0
+	bestLapThisRace = 99999999
 	bestLapIndex = 0
-	r = 0
 
 	for r in range(currentColumn):
 		currentMinutes = int(laptimes[r][0:2]) * 60
 		currentSeconds = float(laptimes[r][3:8])
 		currentBestLap = currentMinutes + currentSeconds
-		currentTime += currentBestLap
-		print(currentTime)
-		if currentBestLap <= bestLap:
-			bestLap = currentBestLap
+		if currentBestLap <= bestLapThisRace:
+			bestLapThisRace = currentBestLap
 			bestLapIndex = r
-	
-	print(r)
-	bestLapStr = laptimes[r]	
 
-	l = Label(tableframe, text="Best Lap: " + bestLapStr , relief=RIDGE)
-	l.grid(row=17, column=0, sticky=NSEW)
+	currentBestLapStr = laptimes[bestLapIndex]
 
 def bestOverallLap():
-	pass
+	global bestLap
+	global bestLapStr
+
+	for r in range(currentColumn):
+		currentMinutes = int(laptimes[r][0:2]) * 60
+		currentSeconds = float(laptimes[r][3:8])
+		currentBestLap = currentMinutes + currentSeconds
+		if currentBestLap <= bestLap:
+			bestLap = currentBestLap
+			bestLapStr = laptimes[r]
 
 def bestOverallTime():
-	pass
+	global bestTimeStr
+	global lapNuberEnum
+
+	lapNuberEnum = 0
+	if int(lapNumberComboBox.get()) == 1:
+		lapNuberEnum = 0
+	if int(lapNumberComboBox.get()) == 3:
+		lapNuberEnum = 1
+	if int(lapNumberComboBox.get()) == 5:
+		lapNuberEnum = 2
+	if int(lapNumberComboBox.get()) == 7:
+		lapNuberEnum = 3
+	if int(lapNumberComboBox.get()) == 10:
+		lapNuberEnum = 4
+
+	for x in range(8):
+		if times[int(line)-1][currentColumn-1][x] != bestTimeStr[lapNuberEnum][x]:
+			if times[int(line)-1][currentColumn-1][x] < bestTimeStr[lapNuberEnum][x]:
+				bestTimeStr[lapNuberEnum] = times[int(line)-1][currentColumn-1]
+			break
+
+def highscoreNameWindow():
+	global nameWindow
+	nameWindow = tk.Toplevel()
+	global userName
+	userName = tk.StringVar(nameWindow)
+
+	title = tk.Label(nameWindow, text="New Highscore!")
+	title.grid(row=0, column=0)
+
+	name = tk.Label(nameWindow, text="Please write your name")
+	name.grid(row=1, column=0)
+
+	nameEntry = tk.Entry(nameWindow, textvariable=userName)
+	nameEntry.grid(row=2, column=0)
+
+	submitButton = tk.Button(nameWindow, text="Submit and close", command=usernameToHighscore)
+	submitButton.grid(row=3, column=0)
+
+def usernameToHighscore():
+	print(userName.get())
+	nameWindow.destroy()
+
+def highscoreWindow():
+	hsWindow = tk.Toplevel()
+
+	blLabel = tk.Label(hsWindow, text="Best lap: " + bestLapStr, relief=RIDGE)
+	blLabel.grid(row=0, column=0)
+
+	cnt = 1
+	for x in range(5):
+		if cnt == 1:	
+			btLabel = tk.Label(hsWindow, text="Best time for " + str(cnt) + " lap: " + bestTimeStr[x], relief=RIDGE)
+			btLabel.grid(row=x+1, column=0)
+		else:
+			btLabel = tk.Label(hsWindow, text="Best time for " + str(cnt) + " laps: " + bestTimeStr[x], relief=RIDGE)
+			btLabel.grid(row=x+1, column=0)
+		
+		if cnt == 7:
+			cnt += 3
+		else:
+			cnt += 2
+
+	closeButton = tk.Button(hsWindow, text="Close", command=hsWindow.destroy, relief=RIDGE)
+	closeButton.grid(row=x+2, column=0)
+
+#Todo
+##########################################################################################
 
 def generateTable():
 	global tableframe
@@ -347,6 +432,15 @@ lapNumberComboBox.bind('<<ComboboxSelected>>', selectionClear)
 
 genTableButton = tk.Button(settingsframe, text='Generate table', command=generateTable)
 genTableButton.grid(row=5, column=1, columnspan=2)
+
+newHighscoreButton = tk.Button(settingsframe, text='New highscore', command=highscoreNameWindow)
+newHighscoreButton.grid(row=6, column=1, columnspan=2)
+
+showHighscoresButton = tk.Button(settingsframe, text='Show highscore', command=highscoreWindow)
+showHighscoresButton.grid(row=7, column=1, columnspan=2)
+
+closeButton = tk.Button(settingsframe, text="Close", command=root.destroy, relief=RIDGE)
+closeButton.grid(row=8, column=1, columnspan=2)
 
 for child in settingsframe.winfo_children(): 
     child.grid_configure(padx=5, pady=3)
