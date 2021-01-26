@@ -5,7 +5,6 @@ Drone gates
 ## Python todo
 <ul>
   High scores</br>
-  Different lap calculations</br>
   Countdown for start</br>
 </ul>
 
