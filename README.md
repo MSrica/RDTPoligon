@@ -1,21 +1,4 @@
-# izborniProjekt1
-Drone gates
+# Izborni Projekt Operacijski sustavi
 
 
-## Python todo
-<ul>
-  High scores</br>
-  Countdown for start</br>
-</ul>
-
-## Arduino todo
-<ul>
-  Starting platform time</br>
-</ul>
-
-## Hardware todo
-<ul>
-  Glue </br>
-  Concrete </br>
-  Gate holder </br>
-</ul>
+## Libraties
