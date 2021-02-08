@@ -1,4 +1,5 @@
 # Izborni Projekt Operacijski sustavi
 
+## Libraries
 
-## Libraties
+Serial:https://pypi.org/project/pyserial/
