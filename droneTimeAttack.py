@@ -28,8 +28,8 @@ root.geometry("1300x700")
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 root.configure(background="#464646")
-root.iconbitmap('C:/Users/Mateo/Desktop/IP/Python/drone2.ico')
-root.iconphoto(True, tk.PhotoImage(file='C:/Users/Mateo/Desktop/IP/Python/drone2.png'))
+root.iconbitmap('drone2.ico')
+root.iconphoto(True, tk.PhotoImage(file='drone2.png'))
 
 def onClosing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -75,13 +75,13 @@ global currentGate
 currentGate = 0
 
 def playPassed():
-	playsound('C:/Users/Mateo/Desktop/IP/Python/passed.mp3', False)
+	playsound('passed.mp3', False)
 
 def playConnected():
-	playsound('C:/Users/Mateo/Desktop/IP/Python/connected.mp3', False)
+	playsound('connected.mp3', False)
 
 def playFinished():
-	playsound('C:/Users/Mateo/Desktop/IP/Python/finished.mp3', False)
+	playsound('finished.mp3', False)
 
 def serialInit():
 	global serialPort
