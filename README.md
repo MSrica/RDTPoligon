@@ -1,7 +1,7 @@
 # Izborni Projekt Operacijski sustavi
 Python program za utrke bespilotnim letjelicama.
 
-### Knjižnice
+## Knjižnice
 
 Serial:https://pypi.org/project/pyserial/ <br/>
 Tkinter: https://docs.python.org/3/library/tkinter.html <br/>
