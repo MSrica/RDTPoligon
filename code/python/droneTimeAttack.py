@@ -16,7 +16,7 @@ from serial import *
 from serial import Serial
 
 import sys
-from threading import Thread 
+from threading import Thread
 
 from playsound import playsound
 
@@ -28,13 +28,13 @@ root.geometry("1300x700")
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 root.configure(background="#464646")
-root.iconbitmap('../pictures/drone.ico')
-root.iconphoto(True, tk.PhotoImage(file='../pictures/drone.png'))
+root.iconbitmap('../../multimedia/pictures/drone.ico')
+root.iconphoto(True, tk.PhotoImage(file='../../multimedia/pictures/drone.png'))
 
 def onClosing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         root.destroy()
-        
+
 root.protocol("WM_DELETE_WINDOW", onClosing)
 
 #Fonts
@@ -71,17 +71,17 @@ timeValue['font'] = stopwatchFont
 serialThreadBoolean = False
 line = "0"
 state = False
-global currentGate 
+global currentGate
 currentGate = 0
 
 def playPassed():
-	playsound('../sounds/passed.mp3', False)
+	playsound('../../multimedia/sounds/passed.mp3', False)
 
 def playConnected():
-	playsound('../sounds/connected.mp3', False)
+	playsound('../../multimedia/sounds/connected.mp3', False)
 
 def playFinished():
-	playsound('../sounds/finished.mp3', False)
+	playsound('../../multimedia/sounds/finished.mp3', False)
 
 def serialInit():
 	global serialPort
@@ -103,20 +103,20 @@ def main():
 		global isStarted
 		global timer
 		global resetTimer
-		global currentGate 
+		global currentGate
 	#Input from receiver
 		bLine = serialPort.readline()
 		line = str(bLine)
 		line = line[2:len(line)-5]
 
 		if line != "":
-	#Ready				
+	#Ready
 			if line == "connected":
 				playConnected()
 				isConnected = True
 				startButton.configure(text="Ready")
 				generateTable()
-	#Liftoff		 	
+	#Liftoff
 			elif line == "0":
 				playPassed()
 				state = True
@@ -174,7 +174,7 @@ def startSerialThread():
 def stopSerialThread():
 	global serialThreadBoolean
 	serialThreadBoolean = False
-			
+
 """
 def lockComboboxes():
 	COMPortCombobox.state(["disabled"])
@@ -250,8 +250,8 @@ def startStopwatch():
 	global state
 	if not state and not (COMPortCombobox.get() == 'None' or COMPortCombobox.get() == ''):
 		state = True
-		startSerialThread()	
-		#lockComboboxes()	
+		startSerialThread()
+		#lockComboboxes()
 	else:
 		messagebox.showinfo(title="Error", message="COM port not chosen or\nstopwatch already started")
 
@@ -276,7 +276,7 @@ resetButton['font'] = buttonFont
 
 stopwatchThread = Thread(target=updateStopwatchTimeText, daemon=True)
 
-for child in mainframe.winfo_children(): 
+for child in mainframe.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
 #Table Frame
@@ -392,7 +392,7 @@ def bestOverallTime():
 def highscoreWindow():
 	hscWindow = tk.Toplevel()
 	hscWindow.configure(background="#464646")
-	
+
 	global timeUsername
 	global lapUsername
 	timeUsername = tk.StringVar(hscWindow)
@@ -478,7 +478,7 @@ def showHighscoreWindow():
 
 	cnt = 1
 	for x in range(5):
-		if cnt == 1:	
+		if cnt == 1:
 			btLabel = ttk.Label(hsWindow, text="Best time for " + str(cnt) + " lap: ")
 			btLabel.grid(row=x+1, column=0, padx=3, pady=3, sticky=E)
 			btLabel['font'] = textFont
@@ -494,7 +494,7 @@ def showHighscoreWindow():
 			btLabelStr = ttk.Label(hsWindow, text=bestTimeStr[x])
 			btLabelStr.grid(row=x+1, column=1, padx=3, pady=3, sticky=W)
 			btLabelStr['font'] = textFont
-		
+
 		if cnt == 7:
 			cnt += 3
 		else:
@@ -520,7 +520,7 @@ def generateTable():
 		createTable = False
 	else:
 		tableframe.destroy()
-	
+
 	tableFrameInit()
 
 	for k in range(1, int(gateNumberComboBox.get())+1):
@@ -537,7 +537,7 @@ def generateTable():
 			if i == 0:
 				l = ttk.Label(tableframe, text="Lap "+ str(j+1), relief=RIDGE)
 				l.grid(row=i, column=j+1, padx=3, pady=3,  sticky=NSEW)
-				l['font'] = tableHeadingFont	
+				l['font'] = tableHeadingFont
 			else:
 				l = ttk.Label(tableframe, text=times[i-1][j], relief=RIDGE)
 				l.grid(row=i, column=j+1, padx=3, pady=3, sticky=NSEW)
@@ -628,8 +628,8 @@ resetHighscoresButton = tk.Button(settingsframe, text='Reset\nHighscores', comma
 resetHighscoresButton.grid(row=9, column=1, columnspan=2)
 resetHighscoresButton['font'] = highscoreButtonFont
 
-for child in settingsframe.winfo_children(): 
+for child in settingsframe.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
 stopwatchThread.start()
-root.mainloop() 
+root.mainloop()
