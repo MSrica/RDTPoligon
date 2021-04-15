@@ -15,19 +15,3 @@ OpenCV
 
 Potrebno je sve datoteke preuzeti i staviti u jedan folder. <br/>
 Serial Monitor se koristi za testiranje ispravnosti vratiju, dok je Drone Time Attack glavni program. <br/>
-
-
-## Notes
-
-### Object recognition
-Object tracking - https://www.youtube.com/watch?v=3D7O_kZi8-o
-<ul>
-  <li>White square(beginning)</li>
-  <li>Yellow circle</li>
-</ul>
-
-Interactive
-<ul>
-  <li>Color recognition - click on the color to track it(changes threshold)</li>
-  <li>Contours - https://docs.opencv.org/3.4/d4/d73/tutorial_py_contours_begin.html</li>
-</ul>
