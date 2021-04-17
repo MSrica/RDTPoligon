@@ -1,0 +1,22 @@
+Camera Feed
+- Figure out where to put lauch platform
+- Track depends on camera angle
+	- Camera calibration
+	- Marker orientation
+	- Distance calculation
+- Track saving
+- Track pick based on possibilities
+- Expected gate setup projection
+
+Drone Time Attack
+- Local records database
+- Local track database
+- Instructions
+- Improve GUI
+
+Track
+- Color
+- LED lighting
+- 3D printing
+	- Lauch platform
+	- ArUco marker clips
