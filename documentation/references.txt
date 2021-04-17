@@ -1,6 +1,15 @@
+Camera Feed
 OpenCV - 			https://opencv-python-tutroals.readthedocs.io/en/latest/index.html
 Intel RealSense - 	https://dev.intelrealsense.com/docs
 Python - 			https://docs.python.org/3/
 Numpy - 			https://numpy.org/doc/
 imutils - 			https://github.com/jrosebr1/imutils
 StackOverflow - 	https://stackoverflow.com
+
+Drone Time Attack
+Serial -	 		https://pypi.org/project/pyserial/
+Tkinter - 			https://docs.python.org/3/library/tkinter.html
+Ttkthemes - 		https://pypi.org/project/ttkthemes/
+System - 			https://docs.python.org/3/library/sys.html
+Threading - 		https://docs.python.org/3/library/threading.html
+Playsound - 		https://pypi.org/project/playsound/
