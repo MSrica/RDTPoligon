@@ -1,12 +1,10 @@
 Camera Feed
 - Figure out where to put lauch platform
-- Track depends on camera angle
-	- Camera calibration
-	- Marker orientation
+- Track layout depends on camera angle
 	- Distance calculation
-- Track saving
-- Track pick based on possibilities
 - Expected gate setup projection
+- Track layout saving
+- Track layout pick based on possibilities
 
 Drone Time Attack
 - Local records database

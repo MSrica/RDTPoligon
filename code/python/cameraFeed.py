@@ -5,9 +5,18 @@ import numpy as np
 import imutils
 import cv2
 
+
 # constants
 # ----------------------------------------------------------------------------------------------------------------------------
 arucoType = cv2.aruco.DICT_4X4_1000
+markerLength = 0.09
+
+
+# global variables
+# ----------------------------------------------------------------------------------------------------------------------------
+cameraMatrix = []
+cameraDistortionCoefficients = []
+
 
 # camera
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -18,6 +27,14 @@ def pipelineInitilazation():
 	pipeline.start(config)
 
 	return pipeline
+
+def pipelineCalibration(pipeline):
+	activeProfile = pipeline.get_active_profile()
+	colorProfile = rs.video_stream_profile(activeProfile.get_stream(rs.stream.color))
+	colorIntrinsics = colorProfile.get_intrinsics()
+	cameraMatrix = [[colorIntrinsics.fx, 0, colorIntrinsics.ppx], [0, colorIntrinsics.fy, colorIntrinsics.ppy], [0, 0, 1]]
+	return np.float32(cameraMatrix), np.float32(colorIntrinsics.coeffs)
+
 def pipelineToImage(pipeline):
 	frames = pipeline.wait_for_frames()
 	colorFrame = frames.get_color_frame()
@@ -26,13 +43,16 @@ def pipelineToImage(pipeline):
 	
 	return colorImage
 
+
 # aruco
 # ----------------------------------------------------------------------------------------------------------------------------
 def arucoFind(image):
 	arucoDictionary = cv2.aruco.Dictionary_get(arucoType)
 	arucoParameters = cv2.aruco.DetectorParameters_create()
 	(corners, ids, _) = cv2.aruco.detectMarkers(image, arucoDictionary, parameters=arucoParameters)
-	return corners, ids
+	rotationVector, translationVector, _ = cv2.aruco.estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, cameraDistortionCoefficients)
+	return corners, ids, rotationVector, translationVector
+
 
 # variable manipulation
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -48,6 +68,7 @@ def getCoordinates(corners):
 
 	return topLeft, topRight, bottomRight, bottomLeft, centerX, centerY
 
+
 # visual representation
 # ----------------------------------------------------------------------------------------------------------------------------
 def drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY):
@@ -56,6 +77,14 @@ def drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, cente
 	cv2.line(image, bottomRight, bottomLeft, (0, 255, 0), 2)
 	cv2.line(image, bottomLeft, topLeft, (0, 255, 0), 2)
 	cv2.circle(image, (centerX, centerY), 4, (0, 0, 255), -1)
+
+def drawMarkerOrientations(image, rotationVector, translationVector):
+	index = 0
+	for x in rotationVector:
+		rvec = rotationVector[index]
+		tvec = translationVector[index]
+		index += 1
+		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rvec, tvec, 0.2)
 
 # main program
 # ----------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +96,7 @@ def mainLoop(pipeline):
 		image = pipelineToImage(pipeline)
 
 		# find ArUco markers on the image
-		corners, ids = arucoFind(image)
+		corners, ids, rotationVector, translationVector = arucoFind(image)
 
 		# one or more markers found
 		if len(corners):
@@ -101,17 +130,24 @@ def mainLoop(pipeline):
 						noBoundariesIds.remove(1)
 						print(noBoundariesIds, "is inside the boudaries")
 
+			drawMarkerOrientations(image, rotationVector, translationVector)
+					
+
 		cv2.imshow('Gate setup', image)
 		if cv2.waitKey(5) & 0xFF == ord('q'):
 			break
+
 def main():
-	# D435i camera setup
+	# D435i camera setup and calibration
+	global cameraMatrix
+	global cameraDistortionCoefficients
 	pipeline = pipelineInitilazation()
+	cameraMatrix, cameraDistortionCoefficients = pipelineCalibration(pipeline)
 
 	# main loop
 	mainLoop(pipeline)
 
 	# stop receiving camera data
 	pipeline.stop()
-if __name__ == "__main__":
-	main()
+
+if __name__ == "__main__": main()
