@@ -1,20 +1,29 @@
 Camera Feed
-- Figure out where to put lauch platform
-- Track layout depends on camera angle
+- Print more markers
+	- 4 corners, 3 gates, 1 lauch platform
+	- Multiple IDs
+- Marker calculations
+	- Digital zoom so that the corners of the track are more or less the corners of the window
 	- Distance calculation
-- Expected gate setup projection
-- Track layout saving
-- Track layout pick based on possibilities
+	- Finding the height(predefined?), angle and base of gates
+	- Expected gate setup projection
+- Track layout operations
+	- Saving to a database
+	- Pick layout based on possibilities(boundaries)
 
 Drone Time Attack
-- Local records database
-- Local track database
 - Instructions
+- Local records database
 - Improve GUI
 
 Track
-- Color
+- Paint
 - LED lighting
+	- Connection to Arduino and power supply
+	- Programming
+		- Arduino
+		- Python double checking and communication with Arduino to change colors
 - 3D printing
 	- Lauch platform
+	- Boxes for corners
 	- ArUco marker clips

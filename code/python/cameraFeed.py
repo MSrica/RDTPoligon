@@ -9,7 +9,9 @@ import cv2
 # constants
 # ----------------------------------------------------------------------------------------------------------------------------
 arucoType = cv2.aruco.DICT_4X4_1000
-markerLength = 0.09
+markerLength = 0.023
+corner1ID = 2
+corner2ID = 3
 
 
 # global variables
@@ -86,6 +88,7 @@ def drawMarkerOrientations(image, rotationVector, translationVector):
 		index += 1
 		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rvec, tvec, 0.2)
 
+
 # main program
 # ----------------------------------------------------------------------------------------------------------------------------
 def mainLoop(pipeline):
@@ -112,11 +115,11 @@ def mainLoop(pipeline):
 				drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY)
 
 				# track limits are defined
-				if 0 in ids and 1 in ids:
-					if markerID == 0:
+				if corner1ID in ids and corner2ID in ids:
+					if markerID == corner1ID:
 						corner1x = centerX
 						corner1y = centerY
-					if markerID == 1:
+					if markerID == corner2ID:
 						corner2x = centerX
 						corner2y = centerY
 
@@ -126,11 +129,11 @@ def mainLoop(pipeline):
 					# printing markers inside boudaries
 					if(((centerX > corner1x and centerX < corner2x) or (centerX < corner1x and centerX > corner2x)) and ((centerY > corner1y and centerY < corner2y) or (centerY < corner1y and centerY > corner2y))):
 						noBoundariesIds = list(ids)
-						noBoundariesIds.remove(0)
-						noBoundariesIds.remove(1)
+						noBoundariesIds.remove(corner1ID)
+						noBoundariesIds.remove(corner2ID)
 						print(noBoundariesIds, "is inside the boudaries")
 
-			drawMarkerOrientations(image, rotationVector, translationVector)
+			#drawMarkerOrientations(image, rotationVector, translationVector)
 					
 
 		cv2.imshow('Gate setup', image)
