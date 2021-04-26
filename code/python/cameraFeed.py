@@ -8,14 +8,33 @@ import cv2
 
 # constants
 # ----------------------------------------------------------------------------------------------------------------------------
+cameraCaptureResolutionX = 1920
+cameraCaptureResolutionY = 1080
+cameraCaptureFps = 30
+windowWidth = 700
+
 arucoType = cv2.aruco.DICT_4X4_1000
-markerLength = 0.023
-corner1ID = 2
-corner2ID = 3
+markerLength = 0.03
+markerOrientationLength = 0.2
+
+lineWidth = 2
+circleWidth = -1
+circleRadius = 4
+green = (0, 255, 0)
+red = (0, 0, 255)
+
+croppedScreenMargin = 40
+
+corner1ID = 0
+corner2ID = 1
+corner3ID = 2
+corner4ID = 3
 
 
 # global variables
 # ----------------------------------------------------------------------------------------------------------------------------
+corner1X = corner1Y = corner2X = corner2Y = corner3X = corner3Y = corner4X = corner4Y = 0
+
 cameraMatrix = []
 cameraDistortionCoefficients = []
 
@@ -25,7 +44,7 @@ cameraDistortionCoefficients = []
 def pipelineInitilazation():
 	pipeline = rs.pipeline()
 	config = rs.config()
-	config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 30)
+	config.enable_stream(rs.stream.color, cameraCaptureResolutionX, cameraCaptureResolutionY, rs.format.bgr8, cameraCaptureFps)
 	pipeline.start(config)
 
 	return pipeline
@@ -41,7 +60,7 @@ def pipelineToImage(pipeline):
 	frames = pipeline.wait_for_frames()
 	colorFrame = frames.get_color_frame()
 	colorImage = np.asanyarray(colorFrame.get_data())
-	colorImage = imutils.resize(colorImage, width=600)
+	colorImage = imutils.resize(colorImage, width=windowWidth)
 	
 	return colorImage
 
@@ -70,15 +89,54 @@ def getCoordinates(corners):
 
 	return topLeft, topRight, bottomRight, bottomLeft, centerX, centerY
 
+def getCorners(markerID, centerX, centerY):
+	global corner1X, corner1Y, corner2X, corner2Y, corner3X, corner3Y, corner4X, corner4Y
+
+	if markerID == corner1ID:
+		corner1X = centerX
+		corner1Y = centerY
+	if markerID == corner2ID:
+		corner2X = centerX
+		corner2Y = centerY
+	if markerID == corner3ID:
+		corner3X = centerX
+		corner3Y = centerY
+	if markerID == corner4ID:
+		corner4X = centerX
+		corner4Y = centerY
+
+def getCroppedCoordinates(maxX, maxY):
+	minCornerX = min(corner1X, corner2X, corner3X, corner4X) - croppedScreenMargin
+	minCornerY = min(corner1Y, corner2Y, corner3Y, corner4Y) - croppedScreenMargin
+	maxCornerX = max(corner1X, corner2X, corner3X, corner4X) + croppedScreenMargin
+	maxCornerY = max(corner1Y, corner2Y, corner3Y, corner4Y) + croppedScreenMargin
+
+	if minCornerX < 0: minCornerX = 1
+	if minCornerY < 0: minCornerY = 1
+	if maxCornerX > maxX: maxCornerX = maxX
+	if maxCornerY > maxY: maxCornerY = maxY
+
+	return minCornerX, minCornerY, maxCornerX, maxCornerY
+
 
 # visual representation
 # ----------------------------------------------------------------------------------------------------------------------------
 def drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY):
-	cv2.line(image, topLeft, topRight, (0, 255, 0), 2)
-	cv2.line(image, topRight, bottomRight, (0, 255, 0), 2)
-	cv2.line(image, bottomRight, bottomLeft, (0, 255, 0), 2)
-	cv2.line(image, bottomLeft, topLeft, (0, 255, 0), 2)
-	cv2.circle(image, (centerX, centerY), 4, (0, 0, 255), -1)
+	cv2.line(image, topLeft, topRight, green, lineWidth)
+	cv2.line(image, topRight, bottomRight, green, lineWidth)
+	cv2.line(image, bottomRight, bottomLeft, green, lineWidth)
+	cv2.line(image, bottomLeft, topLeft, green, lineWidth)
+	cv2.circle(image, (centerX, centerY), circleRadius, red, circleWidth)
+
+def drawBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY):
+	# lines between corners
+	boundaries = np.array([[corner1X, corner1Y], [corner2X, corner2Y], [corner3X, corner3Y], [corner4X, corner4Y]], np.int32)
+	boundaries = boundaries.reshape((-1, 1, 2))
+	cv2.polylines(image, [boundaries] , True, green)
+
+	# boundaries of the cropped screen
+	cv2.circle(image, (minCornerX, minCornerY), circleRadius, red, circleWidth)
+	cv2.circle(image, (maxCornerX, maxCornerY), circleRadius, red, circleWidth)
 
 def drawMarkerOrientations(image, rotationVector, translationVector):
 	index = 0
@@ -86,13 +144,13 @@ def drawMarkerOrientations(image, rotationVector, translationVector):
 		rvec = rotationVector[index]
 		tvec = translationVector[index]
 		index += 1
-		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rvec, tvec, 0.2)
+		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rvec, tvec, markerOrientationLength)
 
 
 # main program
 # ----------------------------------------------------------------------------------------------------------------------------
 def mainLoop(pipeline):
-	corner1x = corner1y = corner2x = corner2y = 0
+	cropped = pipelineToImage(pipeline)
 
 	while True:
 		# get frames from camera and convert to image
@@ -111,32 +169,25 @@ def mainLoop(pipeline):
 				# getting coordinates of corners and centers of markers
 				topLeft, topRight, bottomRight, bottomLeft, centerX, centerY = getCoordinates(corners)
 
-				# drawing boundaries a marker
+				# drawing boundaries of a marker
 				drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY)
 
-				# track limits are defined
-				if corner1ID in ids and corner2ID in ids:
-					if markerID == corner1ID:
-						corner1x = centerX
-						corner1y = centerY
-					if markerID == corner2ID:
-						corner2x = centerX
-						corner2y = centerY
+				# track limits are found
+				if corner1ID in ids and corner2ID in ids and corner3ID in ids and corner4ID in ids:
+					# get corner and cropped coordinates
+					getCorners(markerID, centerX, centerY)
+					(minCornerX, minCornerY, maxCornerX, maxCornerY) = getCroppedCoordinates(image.shape[1]-1, image.shape[0]-1)
 
-					# drawing limits of track
-					cv2.rectangle(image, (corner1x, corner1y), (corner2x, corner2y), (0,255,0), 3)
+					# visual representation of the boundaries
+					drawBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY)
 
-					# printing markers inside boudaries
-					if(((centerX > corner1x and centerX < corner2x) or (centerX < corner1x and centerX > corner2x)) and ((centerY > corner1y and centerY < corner2y) or (centerY < corner1y and centerY > corner2y))):
-						noBoundariesIds = list(ids)
-						noBoundariesIds.remove(corner1ID)
-						noBoundariesIds.remove(corner2ID)
-						print(noBoundariesIds, "is inside the boudaries")
+					if 0 not in {minCornerX, minCornerY, maxCornerX, maxCornerY}:
+						cropped = image[minCornerY+circleRadius:maxCornerY-circleRadius, minCornerX+circleRadius:maxCornerX-circleRadius]
 
-			#drawMarkerOrientations(image, rotationVector, translationVector)
-					
+			#drawMarkerOrientations(image, rotationVector, translationVector)	
 
 		cv2.imshow('Gate setup', image)
+		cv2.imshow('Boundaries', cropped)
 		if cv2.waitKey(5) & 0xFF == ord('q'):
 			break
 

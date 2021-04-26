@@ -5,6 +5,7 @@ Python - 			https://docs.python.org/3/
 Numpy - 			https://numpy.org/doc/
 imutils - 			https://github.com/jrosebr1/imutils
 StackOverflow - 	https://stackoverflow.com
+ArUco maker - 		https://chev.me/arucogen/
 
 Drone Time Attack
 Serial -	 		https://pypi.org/project/pyserial/

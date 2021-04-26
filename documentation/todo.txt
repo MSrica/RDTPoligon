@@ -1,9 +1,6 @@
 Camera Feed
-- Print more markers
-	- 4 corners, 3 gates, 1 lauch platform
-	- Multiple IDs
+- Camera calibration?
 - Marker calculations
-	- Digital zoom so that the corners of the track are more or less the corners of the window
 	- Distance calculation
 	- Finding the height(predefined?), angle and base of gates
 	- Expected gate setup projection
