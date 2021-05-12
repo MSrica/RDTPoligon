@@ -1,34 +1,54 @@
+# TODO
+# convert drawCenterMeasuringSquare to drawCenterMeasuringCircle
+# create a constant.py - https://www.programiz.com/python-programming/variables-constants-literals
+
 # libraries
 # ----------------------------------------------------------------------------------------------------------------------------
 import pyrealsense2 as rs
 import numpy as np
 import imutils
 import cv2
+import math
 
 
 # constants
 # ----------------------------------------------------------------------------------------------------------------------------
+# when connected to USB 3.0
+"""
 cameraCaptureResolutionX = 1920
 cameraCaptureResolutionY = 1080
 cameraCaptureFps = 30
-windowWidth = 700
+"""
+
+# when connected to USB 2.1
+cameraCaptureResolutionX = 1280
+cameraCaptureResolutionY = 720
+cameraCaptureFps = 15
+windowWidth = 800
 
 arucoType = cv2.aruco.DICT_4X4_1000
-markerLength = 0.03
-markerOrientationLength = 0.2
+markerSideLength = 0.03
+markerDiagonalLength = round(math.sqrt((markerSideLength ** 2) * 2), 4)
+markerOrientationLength = 0.015
 
 lineWidth = 2
 circleWidth = -1
 circleRadius = 4
+borderCircleWidth = 2
+borderCircleRadius = 5
+
+blue = (255, 0, 0)
 green = (0, 255, 0)
 red = (0, 0, 255)
 
-croppedScreenMargin = 40
+focusedTrackScreenMargin = 40
+centerSquareSideLength = 15
 
-corner1ID = 0
-corner2ID = 1
-corner3ID = 2
-corner4ID = 3
+measuringMarkerID = 0
+corner1ID = 1
+corner2ID = 2
+corner3ID = 3
+corner4ID = 4
 
 
 # global variables
@@ -46,7 +66,6 @@ def pipelineInitilazation():
 	config = rs.config()
 	config.enable_stream(rs.stream.color, cameraCaptureResolutionX, cameraCaptureResolutionY, rs.format.bgr8, cameraCaptureFps)
 	pipeline.start(config)
-
 	return pipeline
 
 def pipelineCalibration(pipeline):
@@ -61,23 +80,22 @@ def pipelineToImage(pipeline):
 	colorFrame = frames.get_color_frame()
 	colorImage = np.asanyarray(colorFrame.get_data())
 	colorImage = imutils.resize(colorImage, width=windowWidth)
-	
 	return colorImage
 
 
 # aruco
 # ----------------------------------------------------------------------------------------------------------------------------
-def arucoFind(image):
+def findArucoMarkers(image):
 	arucoDictionary = cv2.aruco.Dictionary_get(arucoType)
 	arucoParameters = cv2.aruco.DetectorParameters_create()
 	(corners, ids, _) = cv2.aruco.detectMarkers(image, arucoDictionary, parameters=arucoParameters)
-	rotationVector, translationVector, _ = cv2.aruco.estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, cameraDistortionCoefficients)
+	rotationVector, translationVector, _ = cv2.aruco.estimatePoseSingleMarkers(corners, markerSideLength, cameraMatrix, cameraDistortionCoefficients)
 	return corners, ids, rotationVector, translationVector
 
 
 # variable manipulation
 # ----------------------------------------------------------------------------------------------------------------------------
-def getCoordinates(corners):
+def getMarkerCoordinates(corners):
 	(topLeft, topRight, bottomRight, bottomLeft) = corners
 	topRight = (int(topRight[0]), int(topRight[1]))
 	bottomRight = (int(bottomRight[0]), int(bottomRight[1]))
@@ -89,27 +107,27 @@ def getCoordinates(corners):
 
 	return topLeft, topRight, bottomRight, bottomLeft, centerX, centerY
 
-def getCorners(markerID, centerX, centerY):
+def setTrackCorners(markerID, centerX, centerY):
 	global corner1X, corner1Y, corner2X, corner2Y, corner3X, corner3Y, corner4X, corner4Y
 
 	if markerID == corner1ID:
 		corner1X = centerX
 		corner1Y = centerY
-	if markerID == corner2ID:
+	elif markerID == corner2ID:
 		corner2X = centerX
 		corner2Y = centerY
-	if markerID == corner3ID:
+	elif markerID == corner3ID:
 		corner3X = centerX
 		corner3Y = centerY
-	if markerID == corner4ID:
+	elif markerID == corner4ID:
 		corner4X = centerX
 		corner4Y = centerY
 
-def getCroppedCoordinates(maxX, maxY):
-	minCornerX = min(corner1X, corner2X, corner3X, corner4X) - croppedScreenMargin
-	minCornerY = min(corner1Y, corner2Y, corner3Y, corner4Y) - croppedScreenMargin
-	maxCornerX = max(corner1X, corner2X, corner3X, corner4X) + croppedScreenMargin
-	maxCornerY = max(corner1Y, corner2Y, corner3Y, corner4Y) + croppedScreenMargin
+def getFocusedTrackCoordinates(maxX, maxY):
+	minCornerX = min(corner1X, corner2X, corner3X, corner4X) - focusedTrackScreenMargin
+	minCornerY = min(corner1Y, corner2Y, corner3Y, corner4Y) - focusedTrackScreenMargin
+	maxCornerX = max(corner1X, corner2X, corner3X, corner4X) + focusedTrackScreenMargin
+	maxCornerY = max(corner1Y, corner2Y, corner3Y, corner4Y) + focusedTrackScreenMargin
 
 	if minCornerX < 0: minCornerX = 1
 	if minCornerY < 0: minCornerY = 1
@@ -118,78 +136,156 @@ def getCroppedCoordinates(maxX, maxY):
 
 	return minCornerX, minCornerY, maxCornerX, maxCornerY
 
+def getWindowCenterSquareCoordinates(image):
+	generalXLow = (int)(((image.shape[1]-1) / 2) - centerSquareSideLength)
+	generalYLow = (int)(((image.shape[0]-1) / 2) - centerSquareSideLength)
+	generalXHigh = (int)(((image.shape[1]-1) / 2) + centerSquareSideLength)
+	generalYHigh = (int)(((image.shape[0]-1) / 2) + centerSquareSideLength)
+
+	return generalXLow, generalYLow, generalXHigh, generalYHigh
+
+def checkMeasuringMarkerPosition(image, centerX, centerY):
+	generalXLow, generalYLow, generalXHigh, generalYHigh = getWindowCenterSquareCoordinates(image)
+	if centerX > generalXLow and centerX < generalXHigh and centerY > generalYLow and centerY < generalYHigh:
+		return True
+
+def distanceBetweenTwoPoints(p0, p1):
+	return (int)(math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2))
+
 
 # visual representation
 # ----------------------------------------------------------------------------------------------------------------------------
-def drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY):
+def refreshWindows(image, focusedTrackImage):
+	cv2.imshow('Gate setup', image)
+	cv2.imshow('Focused track', focusedTrackImage)
+
+	if cv2.waitKey(3) & 0xFF == ord('q'):
+		return False
+	return True
+
+def drawMarker(image, markerID, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY):
 	cv2.line(image, topLeft, topRight, green, lineWidth)
 	cv2.line(image, topRight, bottomRight, green, lineWidth)
 	cv2.line(image, bottomRight, bottomLeft, green, lineWidth)
 	cv2.line(image, bottomLeft, topLeft, green, lineWidth)
-	cv2.circle(image, (centerX, centerY), circleRadius, red, circleWidth)
 
-def drawBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY):
+	if markerID == corner1ID or markerID == corner2ID or markerID == corner3ID or markerID == corner4ID:
+		cv2.circle(image, (centerX, centerY), borderCircleRadius, red, borderCircleWidth)
+	else:
+		cv2.circle(image, (centerX, centerY), circleRadius, red, circleWidth)
+
+def drawFoucusedTrackWindow(image, focusedTrackImage, ids, markerID, centerX, centerY):
+	# not all track limits are found
+	if corner1ID not in ids and corner2ID not in ids and corner3ID not in ids and corner4ID not in ids:
+		return focusedTrackImage
+
+	# get corners and focused track coordinates
+	setTrackCorners(markerID, centerX, centerY)
+	(minCornerX, minCornerY, maxCornerX, maxCornerY) = getFocusedTrackCoordinates(image.shape[1]-1, image.shape[0]-1)
+
+	# visual representation of the boundaries
+	drawTrackBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY)
+
+	# alter focused track image dimensions
+	if 0 not in {minCornerX, minCornerY, maxCornerX, maxCornerY}:
+		focusedTrackImage = image[minCornerY+circleRadius:maxCornerY-circleRadius, minCornerX+circleRadius:maxCornerX-circleRadius]
+
+	return focusedTrackImage
+
+def drawTrackBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY):
 	# lines between corners
 	boundaries = np.array([[corner1X, corner1Y], [corner2X, corner2Y], [corner3X, corner3Y], [corner4X, corner4Y]], np.int32)
 	boundaries = boundaries.reshape((-1, 1, 2))
+	firstToSecondX = corner1X - corner2X
+	firstToSecondY = corner1Y - corner2Y
 	cv2.polylines(image, [boundaries] , True, green)
 
-	# boundaries of the cropped screen
+	# boundaries of the focused track window
 	cv2.circle(image, (minCornerX, minCornerY), circleRadius, red, circleWidth)
 	cv2.circle(image, (maxCornerX, maxCornerY), circleRadius, red, circleWidth)
 
 def drawMarkerOrientations(image, rotationVector, translationVector):
-	index = 0
+	index = -1
 	for x in rotationVector:
-		rvec = rotationVector[index]
-		tvec = translationVector[index]
 		index += 1
-		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rvec, tvec, markerOrientationLength)
+		rotVector = rotationVector[index]
+		transVector = translationVector[index]
+		cv2.aruco.drawAxis(image, cameraMatrix, cameraDistortionCoefficients, rotVector, transVector, markerOrientationLength)
+
+def drawCenterMeasuringSquare(image):
+	generalXLow, generalYLow, generalXHigh, generalYHigh = getWindowCenterSquareCoordinates(image)
+	cv2.rectangle(image ,(generalXLow, generalYLow),(generalXHigh, generalYHigh), red, lineWidth)
 
 
 # main program
 # ----------------------------------------------------------------------------------------------------------------------------
 def mainLoop(pipeline):
-	cropped = pipelineToImage(pipeline)
+	global borderCircleRadius
 
-	while True:
+	# local variables 
+	calibrationMarkerDiagonalPixels = 0
+	pixelToMeterRatio = 0
+
+	looping = True
+	measuringMarkerInsideLimits = False
+	distanceSet = False
+
+	focusedTrackImage = pipelineToImage(pipeline)
+
+	# loop
+	while looping:
 		# get frames from camera and convert to image
 		image = pipelineToImage(pipeline)
 
 		# find ArUco markers on the image
-		corners, ids, rotationVector, translationVector = arucoFind(image)
+		corners, ids, rotationVector, translationVector = findArucoMarkers(image)
 
-		# one or more markers found
-		if len(corners):
-			ids = ids.flatten()
+		# drawing the limits in which the measuring marker must be to get recognized
+		if not measuringMarkerInsideLimits:
+			drawCenterMeasuringSquare(image)
+
+		# no markers found
+		if not len(corners):
+			looping = refreshWindows(image, focusedTrackImage)
+			continue
+
+		ids = ids.flatten()
+
+		# cycling through all markers
+		for (markerCorner, markerID) in zip(corners, ids):
+			# condition that distance isn't already calculated and set marker isn't the calibration marker
+			if markerID != measuringMarkerID and not measuringMarkerInsideLimits:
+				continue
+
+			corners = markerCorner.reshape((4, 2))
 			
-			# cycling through all markers
-			for (markerCorner, markerID) in zip(corners, ids):
-				corners = markerCorner.reshape((4, 2))
-				# getting coordinates of corners and centers of markers
-				topLeft, topRight, bottomRight, bottomLeft, centerX, centerY = getCoordinates(corners)
+			# getting coordinates of corners and centers of markers
+			topLeft, topRight, bottomRight, bottomLeft, centerX, centerY = getMarkerCoordinates(corners)
 
-				# drawing boundaries of a marker
-				drawMarker(image, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY)
+			# drawing boundaries of a marker
+			drawMarker(image, markerID, topLeft, topRight, bottomRight, bottomLeft, centerX, centerY)
 
-				# track limits are found
-				if corner1ID in ids and corner2ID in ids and corner3ID in ids and corner4ID in ids:
-					# get corner and cropped coordinates
-					getCorners(markerID, centerX, centerY)
-					(minCornerX, minCornerY, maxCornerX, maxCornerY) = getCroppedCoordinates(image.shape[1]-1, image.shape[0]-1)
+			# checking the position of the measuring marker
+			if not measuringMarkerInsideLimits:
+				measuringMarkerInsideLimits = checkMeasuringMarkerPosition(image, centerX, centerY)
+				if not measuringMarkerInsideLimits:
+					break
 
-					# visual representation of the boundaries
-					drawBoundaries(image, minCornerX, minCornerY, maxCornerX, maxCornerY)
+			# setting starting values of distances
+			if not distanceSet and markerID == measuringMarkerID:
+				calibrationMarkerDiagonalPixels = distanceBetweenTwoPoints(topLeft, bottomRight)
+				borderCircleRadius = (int)(calibrationMarkerDiagonalPixels / 2 + calibrationMarkerDiagonalPixels / 4)
+				pixelToMeterRatio = calibrationMarkerDiagonalPixels / markerDiagonalLength
+				distanceSet = True
+			
+			# finding track limits 
+			focusedTrackImage = drawFoucusedTrackWindow(image, focusedTrackImage, ids, markerID, centerX, centerY)
 
-					if 0 not in {minCornerX, minCornerY, maxCornerX, maxCornerY}:
-						cropped = image[minCornerY+circleRadius:maxCornerY-circleRadius, minCornerX+circleRadius:maxCornerX-circleRadius]
+		# draw marker orientations
+		#drawMarkerOrientations(image, rotationVector, translationVector)
 
-			#drawMarkerOrientations(image, rotationVector, translationVector)	
-
-		cv2.imshow('Gate setup', image)
-		cv2.imshow('Boundaries', cropped)
-		if cv2.waitKey(5) & 0xFF == ord('q'):
-			break
+		# display windows
+		looping = refreshWindows(image, focusedTrackImage)	
 
 def main():
 	# D435i camera setup and calibration
@@ -204,4 +300,5 @@ def main():
 	# stop receiving camera data
 	pipeline.stop()
 
-if __name__ == "__main__": main()
+if __name__ == "__main__": 
+	main()

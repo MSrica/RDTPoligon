@@ -1,7 +1,7 @@
 Camera Feed
 - Camera calibration?
 - Marker calculations
-	- Distance calculation
+	- Distance calculation - https://answers.opencv.org/question/224823/calculate-distance-between-the-center-of-the-aruco-marker-and-the-center-of-the-camera/
 	- Finding the height(predefined?), angle and base of gates
 	- Expected gate setup projection
 - Track layout operations
@@ -11,12 +11,12 @@ Camera Feed
 Drone Time Attack
 - Instructions
 - Local records database
+- ArUco generator
 - Improve GUI
 
 Track
 - Paint
 - LED lighting
-	- Connection to Arduino and power supply
 	- Programming
 		- Arduino
 		- Python double checking and communication with Arduino to change colors
