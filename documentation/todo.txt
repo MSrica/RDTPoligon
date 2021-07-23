@@ -1,12 +1,15 @@
 Camera Feed
 - Camera calibration?
 - Marker calculations
-	- Distance calculation - https://answers.opencv.org/question/224823/calculate-distance-between-the-center-of-the-aruco-marker-and-the-center-of-the-camera/
 	- Finding the height(predefined?), angle and base of gates
 	- Expected gate setup projection
 - Track layout operations
 	- Saving to a database
 	- Pick layout based on possibilities(boundaries)
+
+- 3 granice staze - vuku se paralele da se dode do paralelograma koji se prevodi u pravokutnik - pomice se srednja (druga) granica dok duzina do zadnje nije okomita
+- Spremanje staze - json datoteka sa brojem vratiju, omjeru piksela i metara, koordinatama (omjer rezolucije i koordinate?) zadnje granice i vratiju translatirane do 0,0 i medusobnim udaljenostima u metrima
+- Trazenje rasporeda vratiju u stazama koje su vece ili iste
 
 Drone Time Attack
 - Instructions
