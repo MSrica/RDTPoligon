@@ -1,0 +1,42 @@
+{
+    "test_tracks": [
+        {
+            "id": 0,
+            "track_name": "test track 1", 
+            "ratio": 10, 
+            "width_distance": 15, 
+            "height_distance": 15,
+            "width_pixels":  15, 
+            "height_pixels": 15, 
+            "numberofgates": 1, 
+            "gate_1": [
+                {
+                "pixels_from_0": 15, 
+                "pixels_from_1": 5
+                }
+            ]
+        }, 
+        {
+            "id": 1,
+            "track_name": "test track 2", 
+            "ratio": 100, 
+            "width_distance": 150, 
+            "height_distance": 150,
+            "width_pixels":  15, 
+            "height_pixels": 15,		
+            "numberofgates": 2, 
+            "gate_1": [
+                {
+                    "pixels_from_0": 150, 
+                    "pixels_from_1": 50
+                }
+            ], 
+            "gate_2": [
+                {
+                    "pixels_from_0": 170, 
+                    "pixels_from_1": 50
+                }
+            ]
+        }
+    ]
+}   

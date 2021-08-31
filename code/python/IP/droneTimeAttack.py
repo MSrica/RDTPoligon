@@ -28,8 +28,8 @@ root.geometry("1300x700")
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 root.configure(background="#464646")
-root.iconbitmap('../../multimedia/pictures/drone.ico')
-root.iconphoto(True, tk.PhotoImage(file='../../multimedia/pictures/drone.png'))
+#root.iconbitmap('../../../multimedia/pictures/drone.ico')
+#root.iconphoto(True, tk.PhotoImage(file='../../../multimedia/pictures/drone.png'))
 
 def onClosing():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):

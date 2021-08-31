@@ -14,11 +14,18 @@ windowWidth = 800
 # tipovi, udaljenosti i vrijednosti markera
 arucoType = cv2.aruco.DICT_4X4_1000
 markerSideLength = 0.03
-markerDiagonalLength = round(math.sqrt((markerSideLength ** 2) * 2), 4)
+markerDiagonalLength = math.sqrt((markerSideLength ** 2) * 2) * 100
 markerOrientationLength = 0.015
+
 corner1ID = measuringMarkerID = 0
 corner2ID = 1
 corner3ID = 2
+
+gate1ID = 3
+gate2ID = 4
+gate3ID = 5
+
+maxGateNumber = 3
 
 # boje
 blue = (255, 0, 0)
@@ -36,3 +43,7 @@ borderCircleRadius = 5
 # razne udaljenosti
 focusedTrackScreenMargin = 40
 centerSquareSideLength = 15
+centerCircleRadius = 20
+
+# files
+jsonTracksFileName = "tracks.json"
